@@ -8,9 +8,11 @@ const dns = require("dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 require("dotenv").config({ path: "config.env" });
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser"); // ميدل وير بيقرأ الكوكيز من الهيدر ويحطها في req.cookies
 const app = express();
 exports.app = app;
 app.use(express.json());
+app.use(cookieParser()); // لازم يشتغل قبل الراوتس عشان /refresh و /logout يلاقوا الكوكي
 app.use(morgan("tiny"));
 const httpStatusText = require("./utils/httpStatusText");
 mongoose.connect(process.env.MONGO_URL).then(() => {

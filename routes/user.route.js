@@ -87,5 +87,25 @@ router.route("/register").post(createValid, validateRes, controller.register);
  *         description: Success
  */
 router.route("/login").post(controller.login);
+/**
+ * @swagger
+ * /api/users/refresh:
+ *   post:
+ *     summary: refresh access token
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.route("/refresh").post(controller.refresh); // POST /api/users/refresh -> يجدد الـ Access Token
+/**
+ * @swagger
+ * /api/users/logout:
+ *   post:
+ *     summary: logout user
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.route("/logout").post(controller.logout); // POST /api/users/logout -> يمسح الريفرش من الداتابيز والكوكي
 
 module.exports = router;
