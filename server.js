@@ -71,6 +71,19 @@ app.use((error, req, res, next) => {
   });
 });
 
-app.listen(process.env.PORT, () => {
+const server = app.listen(process.env.PORT, () => {
   console.log(`Server is Running on Port ${process.env.PORT}`);
 });
+
+const shutDown = async () => {
+  console.log("Server shut down...");
+  server.close(async () => {
+    console.log("Server Closed");
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed");
+
+    process.exit(0);
+  });
+};
+process.on("SIGTERM", shutDown);
+process.on("SIGINT", shutDown);

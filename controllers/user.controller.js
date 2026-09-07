@@ -1,12 +1,11 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken"); // محتاجينها عشان نتحقق من الـ Refresh Token في refresh و logout
-
 const asyncWrapper = require("../middleware/errorHandler");
 
 const httpStatusText = require("../utils/httpStatusText");
 const appError = require("../utils/appError");
-
+const { myEmitter } = require("../utils/EvenRegisterLog");
 const generateToken = require("../middleware/generateToken"); // الدالة الأساسية بتعمل Access Token
 const generateRefreshToken = generateToken.generateRefreshToken; // بنطلع دالة الريفرش اللي اتعملت على نفس الموديول
 
@@ -130,10 +129,12 @@ const register = asyncWrapper(async (req, res, next) => {
   newUser.refreshToken = refreshToken; // بنحفظ الريفرش عشان نقارنه بعدين ونلغيه في اللوج آوت
   await newUser.save(); // حفظ المستخدم بالتوكنين مع بعض
   setRefreshCookie(res, refreshToken); // بنبعت الريفرش ككوكي httpOnly للمتصفح
+
   res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { newUser, token, refreshToken }, // بنرجع الاتنين في الـ JSON كمان لو العميل مش بيستخدم كوكيز
+    data: { newUser }, // بنرجع الاتنين في الـ JSON كمان لو العميل مش بيستخدم كوكيز
   });
+  myEmitter.emit("userRegisterSuccessFul", newUser);
 });
 
 //-------------------------Login User------------------------------------------
@@ -171,10 +172,11 @@ const login = asyncWrapper(async (req, res, next) => {
     user.refreshToken = refreshToken; // أي ريفرش قديم بيتبدل (الجلسات القديمة تبطل)
     await user.save(); // حفظ التوكنين في الداتابيز
     setRefreshCookie(res, refreshToken); // الكوكي للمتصفح
+    myEmitter.emit("userLoginSuccessFul", user);
 
     return res
       .status(200)
-      .json({ status: httpStatusText.SUCCESS, token, refreshToken }); // الرد فيه الاتنين عشان Postman أو الموبايل
+      .json({ status: httpStatusText.SUCCESS, token, refreshToken });
   } else {
     res
       .status(500)
