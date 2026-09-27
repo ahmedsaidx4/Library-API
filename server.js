@@ -1,26 +1,35 @@
 const express = require("express");
 const morgan = require("morgan");
-
+const rateLimit = require("express-rate-limit");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-
+const helmet = require("helmet");
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 require("dotenv").config({ path: "config.env" });
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser"); // ميدل وير بيقرأ الكوكيز من الهيدر ويحطها في req.cookies
+const path = require("path");
+
 const app = express();
 exports.app = app;
 app.use(express.json());
-app.use(cookieParser()); // لازم يشتغل قبل الراوتس عشان /refresh و /logout يلاقوا الكوكي
+app.use(cookieParser());
+app.use(helmet()); // لازم يشتغل قبل الراوتس عشان /refresh و /logout يلاقوا الكوكي
 app.use(morgan("tiny"));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 const httpStatusText = require("./utils/httpStatusText");
 mongoose.connect(process.env.MONGO_URL).then(() => {
   console.log("server is connected DataBase ");
 });
 
 //-----------------------------------------------------------------------
-
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 100,
+});
+app.use(limiter);
 // Swagger configuration
 const swaggerOptions = {
   definition: {
@@ -50,12 +59,14 @@ const borrowRoute = require("./routes/borrow.route");
 const authorRoute = require("./routes/author.route");
 const categoryRoute = require("./routes/category.route");
 const bookRoute = require("./routes/book.route");
+const authRoute = require("./routes/auth.route");
 
 app.use("/api/users", userRoute);
 app.use("/api/borrows", borrowRoute);
 app.use("/api/authors", authorRoute);
 app.use("/api/categorys", categoryRoute);
 app.use("/api/books", bookRoute);
+app.use("/api/auth", authRoute);
 
 app.use((req, res, next) => {
   return res
